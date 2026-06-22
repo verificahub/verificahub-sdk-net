@@ -1,0 +1,24 @@
+<Project>
+  <PropertyGroup>
+    <LangVersion>latest</LangVersion>
+    <Nullable>enable</Nullable>
+    <Deterministic>true</Deterministic>
+    <ContinuousIntegrationBuild Condition="'$(CI)' == 'true'">true</ContinuousIntegrationBuild>
+    <Version>0.1.0-preview.1</Version>
+    <Authors>ai-iskuzhin</Authors>
+    <Company>ai-iskuzhin</Company>
+    <Copyright>Copyright (c) ai-iskuzhin 2026</Copyright>
+    <PackageProjectUrl>https://github.com/ai-iskuzhin/VerificahubNet</PackageProjectUrl>
+    <RepositoryUrl>https://github.com/ai-iskuzhin/VerificahubNet</RepositoryUrl>
+    <RepositoryType>git</RepositoryType>
+    <PackageLicenseExpression>MIT</PackageLicenseExpression>
+    <PackageTags>verificahub;verification;otp;flash-call;phone;2fa;auth;sms</PackageTags>
+    <PackageReleaseNotes>See https://github.com/ai-iskuzhin/VerificahubNet/blob/main/CHANGELOG.md</PackageReleaseNotes>
+
+    <!-- Symbols + Source Link: make the published library step-debuggable. -->
+    <IncludeSymbols>true</IncludeSymbols>
+    <SymbolPackageFormat>snupkg</SymbolPackageFormat>
+    <PublishRepositoryUrl>true</PublishRepositoryUrl>
+    <EmbedUntrackedSources>true</EmbedUntrackedSources>
+  </PropertyGroup>
+</Project>

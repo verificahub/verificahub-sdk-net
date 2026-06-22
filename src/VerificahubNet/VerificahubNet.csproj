@@ -1,0 +1,29 @@
+<Project Sdk="Microsoft.NET.Sdk">
+
+  <PropertyGroup>
+    <TargetFrameworks>netstandard2.0;net8.0;net10.0</TargetFrameworks>
+    <ImplicitUsings>disable</ImplicitUsings>
+    <TreatWarningsAsErrors>true</TreatWarningsAsErrors>
+    <GenerateDocumentationFile>true</GenerateDocumentationFile>
+
+    <PackageId>VerificahubNet</PackageId>
+    <Description>.NET SDK for the Verificahub phone-verification API: initiate verifications (SMS, flash call, reverse flash call, Telegram), check codes, poll status, read balance and usage, and validate webhook signatures.</Description>
+    <PackageReadmeFile>README.md</PackageReadmeFile>
+    <PackageIcon Condition="Exists('../../assets/icon.png')">icon.png</PackageIcon>
+  </PropertyGroup>
+
+  <!-- System.Text.Json is in-box on net8.0+; only netstandard2.0 needs the package
+       (the 9.0.0 package also provides polymorphic [JsonDerivedType] support there). -->
+  <ItemGroup Condition="'$(TargetFramework)' == 'netstandard2.0'">
+    <PackageReference Include="System.Text.Json" Version="9.0.0" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <None Include="README.md" Pack="true" PackagePath="\" />
+  </ItemGroup>
+
+  <ItemGroup Condition="Exists('../../assets/icon.png')">
+    <None Include="../../assets/icon.png" Pack="true" PackagePath="\" />
+  </ItemGroup>
+
+</Project>
