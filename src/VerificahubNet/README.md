@@ -65,4 +65,4 @@ catch (VerificahubApiException ex) when (ex.ErrorCode == VerificahubErrorCodes.I
 
 Source, issue tracking, and full documentation:
 
-https://github.com/ai-iskuzhin/VerificahubNet
+https://github.com/verificahub/verificahub-sdk-net

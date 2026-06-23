@@ -1,15 +1,15 @@
 <table>
   <tr>
     <td width="170" align="center" valign="middle">
-      <img src="https://raw.githubusercontent.com/ai-iskuzhin/VerificahubNet/main/assets/icon.png" width="140" alt="VerificahubNet logo" />
+      <img src="https://raw.githubusercontent.com/verificahub/verificahub-sdk-net/main/assets/icon.png" width="140" alt="VerificahubNet logo" />
     </td>
     <td valign="middle">
       <h1>VerificahubNet</h1>
       <p>.NET SDK for the <a href="https://verificahub.ru">Verificahub</a> phone-verification API — SMS, flash call, reverse flash call, and Telegram verification, with typed models and webhook signature validation.</p>
       <p>
-        <a href="https://github.com/ai-iskuzhin/VerificahubNet/actions/workflows/ci.yml"><img src="https://github.com/ai-iskuzhin/VerificahubNet/actions/workflows/ci.yml/badge.svg?branch=main" alt="CI" /></a>
-        <a href="https://github.com/ai-iskuzhin/VerificahubNet/actions/workflows/release.yml"><img src="https://github.com/ai-iskuzhin/VerificahubNet/actions/workflows/release.yml/badge.svg" alt="Release" /></a>
-        <a href="https://github.com/ai-iskuzhin/VerificahubNet/blob/main/LICENSE"><img src="https://img.shields.io/github/license/ai-iskuzhin/VerificahubNet?style=flat-square" alt="License" /></a>
+        <a href="https://github.com/verificahub/verificahub-sdk-net/actions/workflows/ci.yml"><img src="https://github.com/verificahub/verificahub-sdk-net/actions/workflows/ci.yml/badge.svg?branch=main" alt="CI" /></a>
+        <a href="https://github.com/verificahub/verificahub-sdk-net/actions/workflows/release.yml"><img src="https://github.com/verificahub/verificahub-sdk-net/actions/workflows/release.yml/badge.svg" alt="Release" /></a>
+        <a href="https://github.com/verificahub/verificahub-sdk-net/blob/main/LICENSE"><img src="https://img.shields.io/github/license/verificahub/verificahub-sdk-net?style=flat-square" alt="License" /></a>
         <a href="https://dotnet.microsoft.com/"><img src="https://img.shields.io/badge/targets-netstandard2.0%20%7C%20net8.0%20%7C%20net10.0-512BD4?logo=dotnet&amp;style=flat-square" alt="Targets" /></a>
       </p>
       <p>
