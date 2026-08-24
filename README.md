@@ -5,7 +5,7 @@
     </td>
     <td valign="middle">
       <h1>VerificahubNet</h1>
-      <p>.NET SDK for the <a href="https://verificahub.ru">Verificahub</a> phone-verification API — SMS, flash call, reverse flash call, and Telegram verification, with typed models and webhook signature validation.</p>
+      <p>.NET SDK for the <a href="https://verificahub.ru">Verificahub</a> phone-verification API — SMS, flash call, reverse flash call, Telegram, and MTS ID verification, with typed models and webhook signature validation.</p>
       <p>
         <a href="https://github.com/verificahub/verificahub-sdk-net/actions/workflows/ci.yml"><img src="https://github.com/verificahub/verificahub-sdk-net/actions/workflows/ci.yml/badge.svg?branch=main" alt="CI" /></a>
         <a href="https://github.com/verificahub/verificahub-sdk-net/actions/workflows/release.yml"><img src="https://github.com/verificahub/verificahub-sdk-net/actions/workflows/release.yml/badge.svg" alt="Release" /></a>
@@ -23,7 +23,7 @@
 The SDK covers the external integrator API (`/v1/*`) — initiate verifications, check codes, poll
 status, read balance and usage — plus webhook signature validation, and follows Semantic Versioning.
 
-> **Methods:** SMS, flash call, reverse flash call, and Telegram. **Region:** Russia (`+7`).
+> **Methods:** SMS, flash call, reverse flash call, Telegram, and MTS ID. **Region:** Russia (`+7`).
 
 ## Installation
 
@@ -70,6 +70,20 @@ it with `CheckCodeAsync`:
 ```csharp
 var result = await client.CheckCodeAsync(new CheckCodeRequest(verification.RequestId, "123456"));
 bool verified = result.Status == VerificationStatus.Verified;
+```
+
+### MTS ID
+
+`mts_id` pushes a silent confirmation to the user's SIM — nothing is typed on that leg and the result
+arrives over the notification webhook (`verification.verified` / `verification.failed`), so the
+initiate response starts as `VerificationStatus.Sent`. If the push can't be delivered the flow falls
+back to SMS-OTP: a code becomes expected, signalled by the `verification.code_required` webhook and by
+`AwaitingCode` on the status response. Prompt for the code only then, and submit it with `CheckCodeAsync`:
+
+```csharp
+var status = await client.GetStatusAsync(verification.RequestId);
+if (status.AwaitingCode) // MTS ID fell back to SMS-OTP — a code is now expected
+    await client.CheckCodeAsync(new CheckCodeRequest(verification.RequestId, "123456"));
 ```
 
 ## Balance and Usage

@@ -22,6 +22,16 @@ namespace VerificahubNet.Models
         [JsonPropertyName("status")]
         public VerificationStatus Status { get; set; }
 
+        /// <summary>
+        /// Whether the flow is now waiting for the user's code to be submitted via <c>CheckCodeAsync</c>.
+        /// Always <c>false</c> for methods that need no typed code (<c>reverse_flash_call</c>). For
+        /// <c>mts_id</c> it is <c>true</c> only after the silent SIM-push falls back to SMS-OTP (mirrors
+        /// the <c>verification.code_required</c> webhook) — while the push is still in flight it stays
+        /// <c>false</c>, so poll this to know when to prompt the user for a code.
+        /// </summary>
+        [JsonPropertyName("awaiting_code")]
+        public bool AwaitingCode { get; set; }
+
         /// <summary>The amount charged for the verification.</summary>
         [JsonPropertyName("cost")]
         public MoneyResponse Cost { get; set; } = new MoneyResponse();

@@ -7,7 +7,7 @@
     <GenerateDocumentationFile>true</GenerateDocumentationFile>
 
     <PackageId>VerificahubNet</PackageId>
-    <Description>.NET SDK for the Verificahub phone-verification API: initiate verifications (SMS, flash call, reverse flash call, Telegram), check codes, poll status, read balance and usage, and validate webhook signatures.</Description>
+    <Description>.NET SDK for the Verificahub phone-verification API: initiate verifications (SMS, flash call, reverse flash call, Telegram, MTS ID), check codes, poll status, read balance and usage, and validate webhook signatures.</Description>
     <PackageReadmeFile>README.md</PackageReadmeFile>
     <PackageIcon Condition="Exists('../../assets/icon.png')">icon.png</PackageIcon>
   </PropertyGroup>

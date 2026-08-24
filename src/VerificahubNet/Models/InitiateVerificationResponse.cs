@@ -6,7 +6,8 @@ namespace VerificahubNet.Models
     /// <summary>
     /// The result of initiating a verification. The concrete type is chosen by the <c>method</c>
     /// discriminator: <see cref="ReverseFlashCallInitiateResponse"/>, <see cref="SmsInitiateResponse"/>,
-    /// <see cref="FlashCallInitiateResponse"/>, or <see cref="TelegramInitiateResponse"/>.
+    /// <see cref="FlashCallInitiateResponse"/>, <see cref="TelegramInitiateResponse"/>, or
+    /// <see cref="MtsIdInitiateResponse"/>.
     /// </summary>
     public abstract class InitiateVerificationResponse
     {
@@ -76,5 +77,19 @@ namespace VerificahubNet.Models
         /// <inheritdoc />
         [JsonIgnore]
         public override VerificationMethod Method => VerificationMethod.TelegramOtp;
+    }
+
+    /// <summary>
+    /// The <c>mts_id</c> initiation result. Nothing is typed on the push leg — MTS confirms silently
+    /// on the SIM and the outcome arrives over the notification webhook, so <see cref="InitiateVerificationResponse.Status"/>
+    /// starts <see cref="VerificationStatus.Sent"/>. On SMS-OTP fallback a code is expected; poll
+    /// <see cref="GetVerificationStatusResponse.AwaitingCode"/> (or handle the
+    /// <c>verification.code_required</c> webhook) and submit it with <c>CheckCodeAsync</c>.
+    /// </summary>
+    public sealed class MtsIdInitiateResponse : InitiateVerificationResponse
+    {
+        /// <inheritdoc />
+        [JsonIgnore]
+        public override VerificationMethod Method => VerificationMethod.MtsId;
     }
 }

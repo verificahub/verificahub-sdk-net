@@ -76,6 +76,83 @@ public sealed class VerificahubClientTests
     }
 
     [Fact]
+    public async Task VerifyAsync_DeserializesMtsIdResponse_AndSendsMtsIdMethod()
+    {
+        const string json = """
+        {
+          "request_id": "8f2c0000-0000-0000-0000-000000000002",
+          "phone_number": "+79991234567",
+          "status": "sent",
+          "cost": { "amount": 3.00, "currency": "RUB" },
+          "expires_at": "2026-06-21T10:00:00Z",
+          "code_length": 6,
+          "method": "mts_id"
+        }
+        """;
+        var handler = new RecordingHandler(json, HttpStatusCode.Created);
+        using var client = ClientWith(handler);
+
+        var response = await client.VerifyAsync(
+            new InitiateVerificationRequest("+79991234567") { Method = VerificationMethod.MtsId });
+
+        Assert.IsType<MtsIdInitiateResponse>(response);
+        Assert.Equal(VerificationMethod.MtsId, response.Method);
+        Assert.Equal(VerificationStatus.Sent, response.Status); // push leg is async; result arrives by webhook
+
+        using var doc = JsonDocument.Parse(handler.Body!);
+        Assert.Equal("mts_id", doc.RootElement.GetProperty("method").GetString());
+    }
+
+    [Fact]
+    public async Task GetStatusAsync_ParsesAwaitingCode_WhenMtsIdFallsBackToSmsOtp()
+    {
+        const string json = """
+        {
+          "request_id": "8f2c0000-0000-0000-0000-000000000002",
+          "phone_number": "+7999*****67",
+          "method": "mts_id",
+          "status": "sent",
+          "awaiting_code": true,
+          "cost": { "amount": 3.00, "currency": "RUB" },
+          "created_at": "2026-06-21T09:30:00Z",
+          "verified_at": null,
+          "expires_at": "2026-06-21T09:35:00Z"
+        }
+        """;
+        var handler = new RecordingHandler(json);
+        using var client = ClientWith(handler);
+
+        var status = await client.GetStatusAsync(Guid.Parse("8f2c0000-0000-0000-0000-000000000002"));
+
+        Assert.Equal(VerificationMethod.MtsId, status.Method);
+        Assert.True(status.AwaitingCode);
+        Assert.Null(status.VerifiedAt);
+    }
+
+    [Fact]
+    public async Task GetStatusAsync_AwaitingCode_DefaultsFalse_ForMethodsWithoutTypedCode()
+    {
+        const string json = """
+        {
+          "request_id": "8f2c0000-0000-0000-0000-000000000001",
+          "phone_number": "+7999*****67",
+          "method": "reverse_flash_call",
+          "status": "sent",
+          "awaiting_code": false,
+          "cost": { "amount": 1.50, "currency": "RUB" },
+          "created_at": "2026-06-21T09:30:00Z",
+          "expires_at": "2026-06-21T09:35:00Z"
+        }
+        """;
+        var handler = new RecordingHandler(json);
+        using var client = ClientWith(handler);
+
+        var status = await client.GetStatusAsync(Guid.Parse("8f2c0000-0000-0000-0000-000000000001"));
+
+        Assert.False(status.AwaitingCode);
+    }
+
+    [Fact]
     public async Task GetStatusAsync_GetsRequestById_AndParsesMaskedStatus()
     {
         const string json = """

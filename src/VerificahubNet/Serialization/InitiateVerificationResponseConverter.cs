@@ -29,6 +29,7 @@ namespace VerificahubNet.Serialization
                 "sms" => typeof(SmsInitiateResponse),
                 "flash_call" => typeof(FlashCallInitiateResponse),
                 "telegram_otp" => typeof(TelegramInitiateResponse),
+                "mts_id" => typeof(MtsIdInitiateResponse),
                 _ => throw new JsonException($"Unknown or missing verification method discriminator: '{method ?? "<null>"}'.")
             };
 

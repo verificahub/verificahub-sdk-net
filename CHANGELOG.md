@@ -6,6 +6,21 @@ All notable changes to this project are documented here. The format is based on
 
 ## [Unreleased]
 
+## [0.2.0-preview.1]
+
+### Added
+
+- **MTS ID** verification method. `VerificationMethod.MtsId` (`mts_id`) and the
+  `MtsIdInitiateResponse` shape returned by `VerifyAsync`. MTS confirms silently on the SIM and the
+  result arrives over the notification webhook, so the initiate status starts `Sent`; on SMS-OTP
+  fallback a code is expected and submitted via `CheckCodeAsync`.
+- `GetVerificationStatusResponse.AwaitingCode` (`awaiting_code`) — `true` once an `mts_id` flow has
+  fallen back to SMS-OTP and is waiting for the user's code; poll it to know when to prompt.
+- `WebhookEventTypes.VerificationCodeRequired` (`verification.code_required`) — fired when an
+  `mts_id` flow falls back to SMS-OTP and a typed code becomes expected.
+
+These are additive; existing code continues to compile and behave unchanged.
+
 ## [0.1.0-preview.1]
 
 ### Added

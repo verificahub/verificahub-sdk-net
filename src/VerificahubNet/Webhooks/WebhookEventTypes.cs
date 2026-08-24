@@ -9,6 +9,12 @@ namespace VerificahubNet.Webhooks
         /// <summary>The challenge was delivered to the user.</summary>
         public const string VerificationDelivered = "verification.delivered";
 
+        /// <summary>
+        /// A typed code is now expected from the user. Fired only for <c>mts_id</c> when the silent
+        /// SIM-push falls back to SMS-OTP; collect the code and submit it via <c>CheckCodeAsync</c>.
+        /// </summary>
+        public const string VerificationCodeRequired = "verification.code_required";
+
         /// <summary>The user completed the verification successfully.</summary>
         public const string VerificationVerified = "verification.verified";
 

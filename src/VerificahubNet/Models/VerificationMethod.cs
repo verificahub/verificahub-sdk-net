@@ -23,6 +23,15 @@ namespace VerificahubNet.Models
         Sms,
 
         /// <summary>A one-time code delivered over Telegram.</summary>
-        TelegramOtp
+        TelegramOtp,
+
+        /// <summary>
+        /// MTS ID: MTS pushes a silent confirmation to the user's SIM and the result arrives
+        /// asynchronously over the notification webhook (no code is typed on the push leg). If the
+        /// push cannot be delivered the flow falls back to SMS-OTP, at which point a code is expected
+        /// (surfaced by <c>awaiting_code</c> / the <c>verification.code_required</c> webhook) and is
+        /// submitted via <c>CheckCodeAsync</c>.
+        /// </summary>
+        MtsId
     }
 }
