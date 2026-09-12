@@ -1,8 +1,8 @@
 # VerificahubNet
 
 .NET SDK for the [Verificahub](https://verificahub.ru) phone-verification API — initiate
-verifications (SMS, flash call, reverse flash call, Telegram), check codes, poll status, read balance
-and usage, and validate webhook signatures.
+verifications (SMS, flash call, reverse flash call, Telegram, MTS ID, MAX), check codes, poll status,
+read balance, prices and usage, and validate webhook signatures.
 
 ## Install
 
@@ -39,6 +39,7 @@ bool done = status.Status == VerificationStatus.Verified;
 | `GET /v1/verify/{request_id}` | `GetStatusAsync` |
 | `POST /v1/verify/check` | `CheckCodeAsync` |
 | `GET /v1/balance` | `GetBalanceAsync` |
+| `GET /v1/prices` | `GetPricesAsync` |
 | `GET /v1/usage` | `GetUsageAsync` |
 
 It also includes a `WebhookSignatureValidator` for verifying the `X-Verificahub-Signature` header on

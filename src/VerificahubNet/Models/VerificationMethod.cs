@@ -32,6 +32,14 @@ namespace VerificahubNet.Models
         /// (surfaced by <c>awaiting_code</c> / the <c>verification.code_required</c> webhook) and is
         /// submitted via <c>CheckCodeAsync</c>.
         /// </summary>
-        MtsId
+        MtsId,
+
+        /// <summary>
+        /// MAX bot: we return a MAX deep link (<see cref="MaxBotInitiateResponse.DeepLink"/>). The
+        /// user opens the bot and shares their number, the bot delivers the code inside the MAX messenger,
+        /// and the user submits it via <c>CheckCodeAsync</c>. The status starts <c>Sent</c> and flips to
+        /// <c>Delivered</c> once the code reaches the user.
+        /// </summary>
+        MaxBot
     }
 }

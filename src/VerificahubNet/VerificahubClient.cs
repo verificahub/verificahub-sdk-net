@@ -106,6 +106,10 @@ namespace VerificahubNet
             => SendAsync<GetBalanceResponse>(HttpMethod.Get, "v1/balance", null, cancellationToken);
 
         /// <inheritdoc />
+        public Task<GetPricesResponse> GetPricesAsync(CancellationToken cancellationToken = default)
+            => SendAsync<GetPricesResponse>(HttpMethod.Get, "v1/prices", null, cancellationToken);
+
+        /// <inheritdoc />
         public Task<GetUsageResponse> GetUsageAsync(DateTime? from = null, DateTime? to = null, CancellationToken cancellationToken = default)
         {
             var query = new List<string>(2);

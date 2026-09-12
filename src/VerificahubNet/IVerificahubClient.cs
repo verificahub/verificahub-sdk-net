@@ -36,6 +36,10 @@ namespace VerificahubNet
         /// <param name="cancellationToken">A token to cancel the operation.</param>
         Task<GetBalanceResponse> GetBalanceAsync(CancellationToken cancellationToken = default);
 
+        /// <summary>Lists the live per-method verification prices for your account currency (<c>GET /v1/prices</c>).</summary>
+        /// <param name="cancellationToken">A token to cancel the operation.</param>
+        Task<GetPricesResponse> GetPricesAsync(CancellationToken cancellationToken = default);
+
         /// <summary>Gets a usage summary over a date range (<c>GET /v1/usage</c>).</summary>
         /// <param name="from">The first day to include (inclusive). Defaults server-side to 30 days ago.</param>
         /// <param name="to">The last day to include (inclusive). Defaults server-side to today.</param>

@@ -6,6 +6,20 @@ All notable changes to this project are documented here. The format is based on
 
 ## [Unreleased]
 
+## [1.0.0]
+
+First stable release. Covers every `/v1/*` external endpoint and every verification method the API offers.
+
+### Added
+
+- **MAX bot** verification method. `VerificationMethod.MaxBot` (`max_bot`) and the
+  `MaxBotInitiateResponse` shape returned by `VerifyAsync`, carrying `DeepLink` (`deep_link`) — the MAX
+  deep link you show the user. They open the bot and share their number, the bot delivers the code in the
+  MAX messenger, and the user submits it via `CheckCodeAsync`. The status starts `Sent` and flips to
+  `Delivered` (also surfaced by `awaiting_code`) once the code reaches the user.
+- `GetPricesAsync` (`GET /v1/prices`) with `GetPricesResponse` / `MethodPriceResponse` — the live
+  per-method prices for your account currency.
+
 ## [0.2.0-preview.1]
 
 ### Added

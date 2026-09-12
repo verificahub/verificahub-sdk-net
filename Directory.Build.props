@@ -4,7 +4,7 @@
     <Nullable>enable</Nullable>
     <Deterministic>true</Deterministic>
     <ContinuousIntegrationBuild Condition="'$(CI)' == 'true'">true</ContinuousIntegrationBuild>
-    <Version>0.2.0-preview.1</Version>
+    <Version>1.0.0</Version>
     <Authors>ai-iskuzhin</Authors>
     <Company>ai-iskuzhin</Company>
     <Copyright>Copyright (c) ai-iskuzhin 2026</Copyright>

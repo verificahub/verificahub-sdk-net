@@ -6,8 +6,8 @@ namespace VerificahubNet.Models
     /// <summary>
     /// The result of initiating a verification. The concrete type is chosen by the <c>method</c>
     /// discriminator: <see cref="ReverseFlashCallInitiateResponse"/>, <see cref="SmsInitiateResponse"/>,
-    /// <see cref="FlashCallInitiateResponse"/>, <see cref="TelegramInitiateResponse"/>, or
-    /// <see cref="MtsIdInitiateResponse"/>.
+    /// <see cref="FlashCallInitiateResponse"/>, <see cref="TelegramInitiateResponse"/>,
+    /// <see cref="MtsIdInitiateResponse"/>, or <see cref="MaxBotInitiateResponse"/>.
     /// </summary>
     public abstract class InitiateVerificationResponse
     {
@@ -91,5 +91,23 @@ namespace VerificahubNet.Models
         /// <inheritdoc />
         [JsonIgnore]
         public override VerificationMethod Method => VerificationMethod.MtsId;
+    }
+
+    /// <summary>
+    /// The <c>max_bot</c> initiation result. Show the user <see cref="DeepLink"/> (as a link or QR); they
+    /// open the MAX bot, share their number, and receive the code in the MAX messenger, then submit it with
+    /// <c>CheckCodeAsync</c>. <see cref="InitiateVerificationResponse.Status"/> starts
+    /// <see cref="VerificationStatus.Sent"/> and flips to <see cref="VerificationStatus.Delivered"/> once
+    /// the code reaches the user (also surfaced by <see cref="GetVerificationStatusResponse.AwaitingCode"/>).
+    /// </summary>
+    public sealed class MaxBotInitiateResponse : InitiateVerificationResponse
+    {
+        /// <inheritdoc />
+        [JsonIgnore]
+        public override VerificationMethod Method => VerificationMethod.MaxBot;
+
+        /// <summary>The MAX deep link to open the bot (<c>https://max.ru/&lt;bot&gt;?start=…</c>).</summary>
+        [JsonPropertyName("deep_link")]
+        public string DeepLink { get; set; } = string.Empty;
     }
 }

@@ -5,7 +5,7 @@
     </td>
     <td valign="middle">
       <h1>VerificahubNet</h1>
-      <p>.NET SDK for the <a href="https://verificahub.ru">Verificahub</a> phone-verification API — SMS, flash call, reverse flash call, Telegram, and MTS ID verification, with typed models and webhook signature validation.</p>
+      <p>.NET SDK for the <a href="https://verificahub.ru">Verificahub</a> phone-verification API — SMS, flash call, reverse flash call, Telegram, MTS ID, and MAX verification, with typed models and webhook signature validation.</p>
       <p>
         <a href="https://github.com/verificahub/verificahub-sdk-net/actions/workflows/ci.yml"><img src="https://github.com/verificahub/verificahub-sdk-net/actions/workflows/ci.yml/badge.svg?branch=main" alt="CI" /></a>
         <a href="https://github.com/verificahub/verificahub-sdk-net/actions/workflows/release.yml"><img src="https://github.com/verificahub/verificahub-sdk-net/actions/workflows/release.yml/badge.svg" alt="Release" /></a>
@@ -23,7 +23,7 @@
 The SDK covers the external integrator API (`/v1/*`) — initiate verifications, check codes, poll
 status, read balance and usage — plus webhook signature validation, and follows Semantic Versioning.
 
-> **Methods:** SMS, flash call, reverse flash call, Telegram, and MTS ID. **Region:** Russia (`+7`).
+> **Methods:** SMS, flash call, reverse flash call, Telegram, MTS ID, and MAX. **Region:** Russia (`+7`).
 
 ## Installation
 
@@ -86,11 +86,27 @@ if (status.AwaitingCode) // MTS ID fell back to SMS-OTP — a code is now expect
     await client.CheckCodeAsync(new CheckCodeRequest(verification.RequestId, "123456"));
 ```
 
-## Balance and Usage
+### MAX
+
+`max_bot` returns a MAX deep link (`MaxBotInitiateResponse.DeepLink`). Show it to the user as a link or
+QR; they open the bot, share their number, and the bot delivers the code in the MAX messenger. Poll
+`AwaitingCode` (or handle the `verification.delivered` webhook) to know when the code has been delivered,
+then submit it with `CheckCodeAsync`:
+
+```csharp
+if (verification is MaxBotInitiateResponse max)
+    Console.WriteLine($"Open the MAX bot: {max.DeepLink}");
+```
+
+## Balance, prices and usage
 
 ```csharp
 var balance = await client.GetBalanceAsync();
 Console.WriteLine($"{balance.Balance.Amount} {balance.Balance.Currency}");
+
+var prices = await client.GetPricesAsync();
+foreach (var p in prices.Prices)
+    Console.WriteLine($"{p.Method}: {p.Price.Amount} {p.Price.Currency}");
 
 var usage = await client.GetUsageAsync(from: DateTime.UtcNow.AddDays(-7), to: DateTime.UtcNow);
 Console.WriteLine($"{usage.Successful}/{usage.TotalVerifications} verified");

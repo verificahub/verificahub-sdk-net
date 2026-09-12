@@ -104,6 +104,36 @@ public sealed class VerificahubClientTests
     }
 
     [Fact]
+    public async Task VerifyAsync_DeserializesMaxBotResponse_WithDeepLink()
+    {
+        const string json = """
+        {
+          "request_id": "8f2c0000-0000-0000-0000-000000000003",
+          "phone_number": "+79991234567",
+          "status": "sent",
+          "cost": { "amount": 0.30, "currency": "RUB" },
+          "expires_at": "2026-06-21T10:00:00Z",
+          "code_length": 4,
+          "method": "max_bot",
+          "deep_link": "https://max.ru/VerificaHubBot?start=abc123"
+        }
+        """;
+        var handler = new RecordingHandler(json, HttpStatusCode.Created);
+        using var client = ClientWith(handler);
+
+        var response = await client.VerifyAsync(
+            new InitiateVerificationRequest("+79991234567") { Method = VerificationMethod.MaxBot });
+
+        var max = Assert.IsType<MaxBotInitiateResponse>(response);
+        Assert.Equal(VerificationMethod.MaxBot, max.Method);
+        Assert.Equal("https://max.ru/VerificaHubBot?start=abc123", max.DeepLink);
+        Assert.Equal(VerificationStatus.Sent, max.Status);
+
+        using var doc = JsonDocument.Parse(handler.Body!);
+        Assert.Equal("max_bot", doc.RootElement.GetProperty("method").GetString());
+    }
+
+    [Fact]
     public async Task GetStatusAsync_ParsesAwaitingCode_WhenMtsIdFallsBackToSmsOtp()
     {
         const string json = """
@@ -217,6 +247,31 @@ public sealed class VerificahubClientTests
         Assert.Equal("https://api.verificahub.ru/v1/balance", handler.RequestUri!.ToString());
         Assert.Equal(42.50m, balance.Balance.Amount);
         Assert.Equal("RUB", balance.Balance.Currency);
+    }
+
+    [Fact]
+    public async Task GetPricesAsync_GetsPricesEndpoint_AndParsesMethodPrices()
+    {
+        const string json = """
+        {
+          "prices": [
+            { "method": "reverse_flash_call", "price": { "amount": 0.25, "currency": "RUB" } },
+            { "method": "max_bot", "price": { "amount": 0.30, "currency": "RUB" } }
+          ]
+        }
+        """;
+        var handler = new RecordingHandler(json);
+        using var client = ClientWith(handler);
+
+        var prices = await client.GetPricesAsync();
+
+        Assert.Equal("https://api.verificahub.ru/v1/prices", handler.RequestUri!.ToString());
+        Assert.Equal(2, prices.Prices.Count);
+        Assert.Equal(VerificationMethod.ReverseFlashCall, prices.Prices[0].Method);
+        Assert.Equal(0.25m, prices.Prices[0].Price.Amount);
+        Assert.Equal(VerificationMethod.MaxBot, prices.Prices[1].Method);
+        Assert.Equal(0.30m, prices.Prices[1].Price.Amount);
+        Assert.Equal("RUB", prices.Prices[1].Price.Currency);
     }
 
     [Fact]
