@@ -88,28 +88,67 @@ if (status.AwaitingCode) // MTS ID fell back to SMS-OTP — a code is now expect
 
 ### MAX
 
-`max_bot` returns a MAX deep link (`MaxBotInitiateResponse.DeepLink`). Show it to the user as a link or
-QR; they open the bot, share their number, and the bot delivers the code in the MAX messenger. Poll
-`AwaitingCode` (or handle the `verification.delivered` webhook) to know when the code has been delivered,
-then submit it with `CheckCodeAsync`:
+There are two MAX methods and they are not interchangeable.
+
+`max_otp` sends the code straight to the user's number as a MAX message — nothing to open, no bot and
+no link. The user types it back through `CheckCodeAsync`, exactly as with SMS. Delivery is synchronous,
+so a number that is not on MAX fails immediately and is not charged.
+
+`max_bot` is cheaper but costs the user a step: it returns a MAX deep link
+(`MaxBotInitiateResponse.DeepLink`) to show as a link or QR. They open the bot, share their number, and
+the bot delivers the code. Poll `AwaitingCode` (or handle the `verification.delivered` webhook) to know
+when it arrived, then submit it with `CheckCodeAsync`:
 
 ```csharp
 if (verification is MaxBotInitiateResponse max)
     Console.WriteLine($"Open the MAX bot: {max.DeepLink}");
 ```
 
+## Number lookups
+
+A lookup is **not** a verification: it reads what the operator's registry says about a number and proves
+nothing about who is holding the phone. No session, no code, no webhook — and you are charged per
+answer.
+
+```csharp
+var info = await client.LookupNumberInfoAsync(new LookupRequest { PhoneNumber = "+79991234567" });
+if (info.Status == LookupStatus.Ok)
+    Console.WriteLine($"{info.Operator}, region {info.RegionCode}, ported: {info.Ported}");
+
+var activity = await client.LookupActivityAsync(new LookupRequest { PhoneNumber = "+79991234567" });
+Console.WriteLine($"score: {activity.Score}");   // 0 to 1
+```
+
+Worth knowing before you build on it:
+
+- **"No data" is an answer, not an error.** It comes back as `LookupStatus.NoData` with `Cost.Amount`
+  of zero. Retrying will not change it, and a number with no activity score may still answer
+  `LookupNumberInfoAsync` — that describes the service for that number, not the number.
+- **Reconcile against `Cost`, not against the number of requests you made.**
+- **The operator is the one serving the number now**, which is not what its prefix implies: a ported
+  number keeps the prefix of the operator that issued it. That is the reason to ask rather than infer.
+- **Treat the activity score as a signal, not a verdict.** The same number can score differently on
+  repeated lookups, so it is sound for cleaning a list and unsound as the sole basis for refusing a
+  customer.
+
 ## Balance, prices and usage
 
 ```csharp
 var balance = await client.GetBalanceAsync();
-Console.WriteLine($"{balance.Balance.Amount} {balance.Balance.Currency}");
+// Check Available, not Balance: an account with an agreed credit limit may spend below zero, and a
+// request costing more than Available is refused with insufficient_balance.
+Console.WriteLine($"{balance.Available.Amount} {balance.Available.Currency} left to spend");
 
 var prices = await client.GetPricesAsync();
 foreach (var p in prices.Prices)
     Console.WriteLine($"{p.Method}: {p.Price.Amount} {p.Price.Currency}");
+foreach (var l in prices.Lookups)
+    Console.WriteLine($"lookup {l.Method}: {l.Price.Amount} {l.Price.Currency}");
 
 var usage = await client.GetUsageAsync(from: DateTime.UtcNow.AddDays(-7), to: DateTime.UtcNow);
 Console.WriteLine($"{usage.Successful}/{usage.TotalVerifications} verified");
+// Lookups are counted separately, so spend for the range is the two totals added together.
+Console.WriteLine($"{usage.Lookups.Billable}/{usage.Lookups.Total} lookups charged");
 ```
 
 ## Receiving Webhooks

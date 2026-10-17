@@ -40,6 +40,35 @@ namespace VerificahubNet
         /// <param name="cancellationToken">A token to cancel the operation.</param>
         Task<GetPricesResponse> GetPricesAsync(CancellationToken cancellationToken = default);
 
+        /// <summary>
+        /// Looks up operator, region and porting for a number (<c>POST /v1/lookup/number-info</c>).
+        /// </summary>
+        /// <remarks>
+        /// <b>Not a verification.</b> It reads the operator's registry and proves nothing about who
+        /// holds the phone — there is no session, no code and no webhook. Useful before you spend on
+        /// a verification: the operator a number is on now is not what its prefix implies, because a
+        /// ported number keeps the prefix of the operator that issued it.
+        /// <para>
+        /// A number the registry knows nothing about returns <see cref="LookupStatus.NoData"/> with
+        /// a zero cost — an answer, not an error.
+        /// </para>
+        /// </remarks>
+        /// <param name="request">The number to look up.</param>
+        /// <param name="cancellationToken">A token to cancel the operation.</param>
+        Task<LookupResponse> LookupNumberInfoAsync(LookupRequest request, CancellationToken cancellationToken = default);
+
+        /// <summary>
+        /// Scores how active a number is in the network, 0 to 1 (<c>POST /v1/lookup/activity</c>).
+        /// </summary>
+        /// <remarks>
+        /// Intended for cleaning a list before a send, not for refusing an individual customer: the
+        /// same number can score differently on repeated lookups. As with number info, no data is an
+        /// answer and costs nothing.
+        /// </remarks>
+        /// <param name="request">The number to look up.</param>
+        /// <param name="cancellationToken">A token to cancel the operation.</param>
+        Task<LookupResponse> LookupActivityAsync(LookupRequest request, CancellationToken cancellationToken = default);
+
         /// <summary>Gets a usage summary over a date range (<c>GET /v1/usage</c>).</summary>
         /// <param name="from">The first day to include (inclusive). Defaults server-side to 30 days ago.</param>
         /// <param name="to">The last day to include (inclusive). Defaults server-side to today.</param>

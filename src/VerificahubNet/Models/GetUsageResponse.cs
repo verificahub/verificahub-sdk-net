@@ -47,6 +47,16 @@ namespace VerificahubNet.Models
         /// <summary>Per-day breakdown; days with no activity are omitted.</summary>
         [JsonPropertyName("daily")]
         public IReadOnlyList<UsageDayResponse> Daily { get; set; } = Array.Empty<UsageDayResponse>();
+
+        /// <summary>
+        /// Number-lookup usage over the same range, counted separately from verifications.
+        /// </summary>
+        /// <remarks>
+        /// The fields above cover verifications only, so what you spent over the range is
+        /// <c>total_cost</c> <b>plus</b> <c>lookups.total_cost</c>.
+        /// </remarks>
+        [JsonPropertyName("lookups")]
+        public LookupUsageResponse Lookups { get; set; } = new LookupUsageResponse();
     }
 
     /// <summary>A single day's verification counts within a usage report.</summary>
@@ -65,4 +75,32 @@ namespace VerificahubNet.Models
         [JsonPropertyName("verified")]
         public int Verified { get; set; }
     }
+
+    /// <summary>Number-lookup usage within a usage report.</summary>
+    public sealed class LookupUsageResponse
+    {
+        /// <summary>Lookups requested in the range, answered or not.</summary>
+        [JsonPropertyName("total")]
+        public int Total { get; set; }
+
+        /// <summary>
+        /// How many of those were charged for — lower than <see cref="Total"/> by exactly the ones
+        /// that found no data, which are free. This is the count <see cref="TotalCost"/> is made of.
+        /// </summary>
+        [JsonPropertyName("billable")]
+        public int Billable { get; set; }
+
+        /// <summary>What the lookups cost in total.</summary>
+        [JsonPropertyName("total_cost")]
+        public MoneyResponse TotalCost { get; set; } = new MoneyResponse();
+
+        /// <summary>Counts per lookup service.</summary>
+        [JsonPropertyName("by_method")]
+        public IReadOnlyDictionary<LookupMethod, int> ByMethod { get; set; } = new Dictionary<LookupMethod, int>();
+
+        /// <summary>Counts per outcome — where the share of "no data" shows up.</summary>
+        [JsonPropertyName("by_status")]
+        public IReadOnlyDictionary<LookupStatus, int> ByStatus { get; set; } = new Dictionary<LookupStatus, int>();
+    }
+
 }

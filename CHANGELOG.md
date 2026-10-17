@@ -6,6 +6,39 @@ All notable changes to this project are documented here. The format is based on
 
 ## [Unreleased]
 
+## [1.1.0]
+
+Catches the client up with the API: one verification method and a whole service had shipped without it.
+
+### Added
+
+- **MAX** verification method — `VerificationMethod.MaxOtp` (`max_otp`). The code is sent straight to
+  the user's number as a MAX message: nothing to open, no bot, no deep link, and the code comes back
+  through `CheckCodeAsync` as with SMS. Distinct from `MaxBot`, which is cheaper but costs the user an
+  extra step; they are different methods at different prices and the names invite confusion.
+- **Number lookups** — `LookupNumberInfoAsync` (`POST /v1/lookup/number-info`) and `LookupActivityAsync`
+  (`POST /v1/lookup/activity`), with `LookupRequest`, `LookupResponse`, `LookupMethod`, `LookupStatus`
+  and `MobileOperator`.
+
+  A lookup is not a verification — it reads the operator's registry and proves nothing about who holds
+  the phone. **"No data" is an answer, not an error:** `LookupStatus.NoData` arrives as a `200` with a
+  zero `Cost`, retrying will not change it, and a number with no activity score may still answer
+  number-info. Reconcile against `Cost` rather than against the requests you made.
+- `GetPricesResponse.Lookups` — the lookup tariffs, listed separately from the verification methods
+  because they are charged per answer rather than at a delivery milestone.
+- `GetUsageResponse.Lookups` — lookup usage counted separately from verifications, with `Billable`
+  below `Total` by exactly the requests that found nothing. Spend for a range is the two totals added
+  together.
+- `GetBalanceResponse.CreditLimit` and `.Available` — for an account with an agreed credit limit the
+  balance may go below zero. **Check `Available`, not `Balance`:** a request costing more than
+  `Available` is refused with `insufficient_balance`, and for a credited account the two differ.
+
+### Note
+
+Unknown enum values still fall back to `Unknown` rather than throwing, so a method or lookup service
+added server-side does not break a client that has not been upgraded.
+
+
 ## [1.0.0]
 
 First stable release. Covers every `/v1/*` external endpoint and every verification method the API offers.

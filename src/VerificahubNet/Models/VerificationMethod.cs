@@ -35,6 +35,15 @@ namespace VerificahubNet.Models
         MtsId,
 
         /// <summary>
+        /// MAX: the code is sent straight to the user's number as a MAX message — nothing to open,
+        /// no bot and no link. The user submits it via <c>CheckCodeAsync</c>, as with
+        /// <see cref="Sms"/>. Delivery is synchronous, so a number that is not on MAX fails
+        /// immediately and is not charged. Distinct from <see cref="MaxBot"/>, which is cheaper but
+        /// costs the user an extra step.
+        /// </summary>
+        MaxOtp,
+
+        /// <summary>
         /// MAX bot: we return a MAX deep link (<see cref="MaxBotInitiateResponse.DeepLink"/>). The
         /// user opens the bot and shares their number, the bot delivers the code inside the MAX messenger,
         /// and the user submits it via <c>CheckCodeAsync</c>. The status starts <c>Sent</c> and flips to

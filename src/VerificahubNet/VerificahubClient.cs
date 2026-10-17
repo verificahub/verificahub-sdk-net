@@ -110,6 +110,23 @@ namespace VerificahubNet
             => SendAsync<GetPricesResponse>(HttpMethod.Get, "v1/prices", null, cancellationToken);
 
         /// <inheritdoc />
+        public Task<LookupResponse> LookupNumberInfoAsync(LookupRequest request, CancellationToken cancellationToken = default)
+            => LookupAsync("v1/lookup/number-info", request, cancellationToken);
+
+        /// <inheritdoc />
+        public Task<LookupResponse> LookupActivityAsync(LookupRequest request, CancellationToken cancellationToken = default)
+            => LookupAsync("v1/lookup/activity", request, cancellationToken);
+
+        private Task<LookupResponse> LookupAsync(string path, LookupRequest request, CancellationToken cancellationToken)
+        {
+            if (request == null)
+            {
+                throw new ArgumentNullException(nameof(request));
+            }
+            return SendAsync<LookupResponse>(HttpMethod.Post, path, request, cancellationToken);
+        }
+
+        /// <inheritdoc />
         public Task<GetUsageResponse> GetUsageAsync(DateTime? from = null, DateTime? to = null, CancellationToken cancellationToken = default)
         {
             var query = new List<string>(2);
