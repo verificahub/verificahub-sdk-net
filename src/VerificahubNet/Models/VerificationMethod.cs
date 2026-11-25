@@ -4,6 +4,10 @@ using VerificahubNet.Serialization;
 namespace VerificahubNet.Models
 {
     /// <summary>The method used to deliver or complete a verification.</summary>
+    /// <remarks>
+    /// Values are pinned explicitly: members retired from the API leave a gap rather than shifting the
+    /// numbers of the ones that remain, so a value you have persisted as an integer keeps its meaning.
+    /// </remarks>
     [JsonConverter(typeof(SnakeCaseEnumConverter<VerificationMethod>))]
     public enum VerificationMethod
     {
@@ -11,19 +15,18 @@ namespace VerificahubNet.Models
         Unknown = 0,
 
         /// <summary>Inbound flash call: the user dials a number we hand out and we verify by caller id (no code to submit).</summary>
-        ReverseFlashCall,
+        ReverseFlashCall = 1,
 
         /// <summary>Outbound flash call: the verification code is the trailing digits of the calling number.</summary>
-        FlashCall,
+        FlashCall = 2,
 
-        /// <summary>A voice call that reads out the code (not currently offered).</summary>
-        Voice,
+        // 3 was Voice, which the API never accepted; the voice method is PassCall.
 
         /// <summary>A one-time code delivered by SMS.</summary>
-        Sms,
+        Sms = 4,
 
         /// <summary>A one-time code delivered over Telegram.</summary>
-        TelegramOtp,
+        TelegramOtp = 5,
 
         /// <summary>
         /// MTS ID: MTS pushes a silent confirmation to the user's SIM and the result arrives
@@ -32,16 +35,9 @@ namespace VerificahubNet.Models
         /// (surfaced by <c>awaiting_code</c> / the <c>verification.code_required</c> webhook) and is
         /// submitted via <c>CheckCodeAsync</c>.
         /// </summary>
-        MtsId,
+        MtsId = 6,
 
-        /// <summary>
-        /// MAX: the code is sent straight to the user's number as a MAX message — nothing to open,
-        /// no bot and no link. The user submits it via <c>CheckCodeAsync</c>, as with
-        /// <see cref="Sms"/>. Delivery is synchronous, so a number that is not on MAX fails
-        /// immediately and is not charged. Distinct from <see cref="MaxBot"/>, which is cheaper but
-        /// costs the user an extra step.
-        /// </summary>
-        MaxOtp,
+        // 7 was MaxOtp, withdrawn from the public API.
 
         /// <summary>
         /// MAX bot: we return a MAX deep link (<see cref="MaxBotInitiateResponse.DeepLink"/>). The
@@ -49,6 +45,19 @@ namespace VerificahubNet.Models
         /// and the user submits it via <c>CheckCodeAsync</c>. The status starts <c>Sent</c> and flips to
         /// <c>Delivered</c> once the code reaches the user.
         /// </summary>
-        MaxBot
+        MaxBot = 8,
+
+        /// <summary>
+        /// A one-time code delivered from the official VerificaHub WhatsApp Business account. The user
+        /// submits it via <c>CheckCodeAsync</c>, as with <see cref="Sms"/>.
+        /// </summary>
+        WhatsappOtp = 9,
+
+        /// <summary>
+        /// Voice verification: a robot calls the number and dictates the code, which the user submits via
+        /// <c>CheckCodeAsync</c>. Charged when the call is requested, not when it is answered, and the call
+        /// shows the caller-ID label of the platform's legal entity rather than your service name.
+        /// </summary>
+        PassCall = 10
     }
 }

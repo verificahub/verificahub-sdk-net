@@ -11,6 +11,11 @@ namespace VerificahubNet.Serialization
     /// System.Text.Json polymorphism requires the discriminator to be the first property, which the
     /// server does not guarantee; this converter is position-independent.
     /// </summary>
+    /// <remarks>
+    /// An unrecognised or missing discriminator yields <see cref="UnknownInitiateResponse"/> instead of
+    /// throwing. The verification has already been created server-side by the time this runs, so failing
+    /// here would hide a live (and possibly billed) verification from the caller.
+    /// </remarks>
     public sealed class InitiateVerificationResponseConverter : JsonConverter<InitiateVerificationResponse>
     {
         /// <inheritdoc />
@@ -20,8 +25,9 @@ namespace VerificahubNet.Serialization
             JsonElement root = document.RootElement;
 
             string? method = root.TryGetProperty("method", out JsonElement methodElement)
-                ? methodElement.GetString()
-                : null;
+                && methodElement.ValueKind == JsonValueKind.String
+                    ? methodElement.GetString()
+                    : null;
 
             Type target = method switch
             {
@@ -29,9 +35,11 @@ namespace VerificahubNet.Serialization
                 "sms" => typeof(SmsInitiateResponse),
                 "flash_call" => typeof(FlashCallInitiateResponse),
                 "telegram_otp" => typeof(TelegramInitiateResponse),
+                "whatsapp_otp" => typeof(WhatsAppInitiateResponse),
                 "mts_id" => typeof(MtsIdInitiateResponse),
                 "max_bot" => typeof(MaxBotInitiateResponse),
-                _ => throw new JsonException($"Unknown or missing verification method discriminator: '{method ?? "<null>"}'.")
+                "pass_call" => typeof(PassCallInitiateResponse),
+                _ => typeof(UnknownInitiateResponse)
             };
 
             // The converter matches only the base type, so deserializing the concrete derived type
@@ -41,6 +49,12 @@ namespace VerificahubNet.Serialization
             {
                 throw new JsonException("The verification response body was null.");
             }
+
+            if (result is UnknownInitiateResponse unknown)
+            {
+                unknown.RawMethod = method;
+            }
+
             return result;
         }
 

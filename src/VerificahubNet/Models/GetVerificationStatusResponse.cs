@@ -47,5 +47,16 @@ namespace VerificahubNet.Models
         /// <summary>When the verification expires.</summary>
         [JsonPropertyName("expires_at")]
         public DateTimeOffset ExpiresAt { get; set; }
+
+        /// <summary>
+        /// Why the verification did not succeed, or <c>null</c> while it is open or once it is verified.
+        /// </summary>
+        /// <remarks>
+        /// Set when the session ends <see cref="VerificationStatus.Expired"/> or
+        /// <see cref="VerificationStatus.Failed"/>. Useful for deciding whether to retry on the same
+        /// method or offer another one.
+        /// </remarks>
+        [JsonPropertyName("failure_reason")]
+        public VerificationFailureReason? FailureReason { get; set; }
     }
 }

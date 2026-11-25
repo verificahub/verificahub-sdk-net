@@ -1,11 +1,11 @@
 <table>
   <tr>
     <td width="170" align="center" valign="middle">
-      <img src="https://raw.githubusercontent.com/verificahub/verificahub-sdk-net/main/assets/icon.png" width="140" alt="VerificahubNet logo" />
+      <img src="assets/icon.png" width="140" alt="VerificahubNet logo" />
     </td>
     <td valign="middle">
       <h1>VerificahubNet</h1>
-      <p>.NET SDK for the <a href="https://verificahub.ru">Verificahub</a> phone-verification API — SMS, flash call, reverse flash call, Telegram, MTS ID, and MAX verification, with typed models and webhook signature validation.</p>
+      <p>.NET SDK for the <a href="https://verificahub.ru">Verificahub</a> phone-verification API — reverse flash call, flash call, SMS, voice call, Telegram, WhatsApp, MTS ID and MAX, with typed models and webhook signature validation.</p>
       <p>
         <a href="https://github.com/verificahub/verificahub-sdk-net/actions/workflows/ci.yml"><img src="https://github.com/verificahub/verificahub-sdk-net/actions/workflows/ci.yml/badge.svg?branch=main" alt="CI" /></a>
         <a href="https://github.com/verificahub/verificahub-sdk-net/actions/workflows/release.yml"><img src="https://github.com/verificahub/verificahub-sdk-net/actions/workflows/release.yml/badge.svg" alt="Release" /></a>
@@ -21,9 +21,10 @@
 </table>
 
 The SDK covers the external integrator API (`/v1/*`) — initiate verifications, check codes, poll
-status, read balance and usage — plus webhook signature validation, and follows Semantic Versioning.
+status, read balance, prices and usage — plus webhook signature validation, and follows Semantic Versioning.
 
-> **Methods:** SMS, flash call, reverse flash call, Telegram, MTS ID, and MAX. **Region:** Russia (`+7`).
+> **Methods:** `reverse_flash_call`, `flash_call`, `sms`, `pass_call`, `telegram_otp`, `whatsapp_otp`,
+> `mts_id` and `max_bot`. **Region:** Russia (`+7`).
 
 ## Installation
 
@@ -34,9 +35,14 @@ dotnet add package VerificahubNet
 The library multi-targets `netstandard2.0`, `net8.0`, and `net10.0`, so it runs on .NET Framework
 4.6.1+, .NET Core 2.0+, Mono, Unity, and modern .NET.
 
-## Quick Start
+## Before you start
 
-Obtain an `api_key` and `api_secret` from your Verificahub dashboard, then:
+Obtain an `api_key` and `api_secret` from your Verificahub dashboard. The API opens once your project
+has passed **project verification** in the dashboard, and then only from the server addresses approved
+for it. Until then every call fails with `compliance_required` or `ip_not_allowed` — see
+[Error Handling](#error-handling).
+
+## Quick Start
 
 ```csharp
 using VerificahubNet;
@@ -55,6 +61,23 @@ Credentials are sent as an `Authorization: Basic base64(api_key:api_secret)` hea
 
 ## Initiating and Completing a Verification
 
+`VerifyAsync` returns a subtype of `InitiateVerificationResponse` chosen by the method:
+
+| Method | Response type | What the user does |
+| --- | --- | --- |
+| `ReverseFlashCall` *(default)* | `ReverseFlashCallInitiateResponse` (`NumberToCall`) | Dials the number; no code |
+| `FlashCall` | `FlashCallInitiateResponse` | Types the code from the caller ID |
+| `Sms` | `SmsInitiateResponse` | Types the code from the SMS |
+| `PassCall` | `PassCallInitiateResponse` | Answers the call, types the dictated code |
+| `TelegramOtp` | `TelegramInitiateResponse` | Types the code from Telegram |
+| `WhatsappOtp` | `WhatsAppInitiateResponse` | Types the code from WhatsApp |
+| `MtsId` | `MtsIdInitiateResponse` | Confirms on the SIM, or types a code on fallback |
+| `MaxBot` | `MaxBotInitiateResponse` (`DeepLink`) | Opens the MAX bot, types the code |
+
+A method the API adds after this SDK version was built comes back as `UnknownInitiateResponse`
+(with `RawMethod`) instead of throwing, so you never lose the `RequestId` of a verification that has
+already started.
+
 `reverse_flash_call` completes automatically — the user dials a number we hand out and we verify by
 caller id, so there is no code to submit. Poll for completion:
 
@@ -64,13 +87,36 @@ var status = await client.GetStatusAsync(verification.RequestId);
 bool done = status.Status == VerificationStatus.Verified;
 ```
 
-The code-based methods (`sms`, `flash_call`, `telegram_otp`) deliver a code the user enters; submit
-it with `CheckCodeAsync`:
+The code-based methods deliver a code the user enters; submit it with `CheckCodeAsync`:
 
 ```csharp
-var result = await client.CheckCodeAsync(new CheckCodeRequest(verification.RequestId, "123456"));
+var result = await client.CheckCodeAsync(new CheckCodeRequest(verification.RequestId, "1234"));
 bool verified = result.Status == VerificationStatus.Verified;
 ```
+
+### When a verification does not succeed
+
+`GetStatusAsync` reports `FailureReason` once a session ends `Expired` or `Failed`. Use it to decide
+what to offer next:
+
+```csharp
+switch (status.FailureReason)
+{
+    case VerificationFailureReason.NotDelivered:
+    case VerificationFailureReason.Unreachable:
+        // The channel could not reach the user — offer a different method.
+        break;
+    case VerificationFailureReason.Declined:
+        // The user refused; retrying the same channel rarely helps.
+        break;
+}
+```
+
+### Voice call (`pass_call`)
+
+A robot calls the number and dictates the code. It is charged when the call is **requested**, not
+when it is answered, and the call shows the caller-ID label of the platform's legal entity rather than
+your service name — tell the user who will be calling.
 
 ### MTS ID
 
@@ -88,48 +134,14 @@ if (status.AwaitingCode) // MTS ID fell back to SMS-OTP — a code is now expect
 
 ### MAX
 
-There are two MAX methods and they are not interchangeable.
-
-`max_otp` sends the code straight to the user's number as a MAX message — nothing to open, no bot and
-no link. The user types it back through `CheckCodeAsync`, exactly as with SMS. Delivery is synchronous,
-so a number that is not on MAX fails immediately and is not charged.
-
-`max_bot` is cheaper but costs the user a step: it returns a MAX deep link
-(`MaxBotInitiateResponse.DeepLink`) to show as a link or QR. They open the bot, share their number, and
-the bot delivers the code. Poll `AwaitingCode` (or handle the `verification.delivered` webhook) to know
-when it arrived, then submit it with `CheckCodeAsync`:
+`max_bot` returns a MAX deep link (`MaxBotInitiateResponse.DeepLink`) to show as a link or QR. The user
+opens the bot, shares their number, and the bot delivers the code. Poll `AwaitingCode` (or handle the
+`verification.delivered` webhook) to know when it arrived, then submit it with `CheckCodeAsync`:
 
 ```csharp
 if (verification is MaxBotInitiateResponse max)
     Console.WriteLine($"Open the MAX bot: {max.DeepLink}");
 ```
-
-## Number lookups
-
-A lookup is **not** a verification: it reads what the operator's registry says about a number and proves
-nothing about who is holding the phone. No session, no code, no webhook — and you are charged per
-answer.
-
-```csharp
-var info = await client.LookupNumberInfoAsync(new LookupRequest { PhoneNumber = "+79991234567" });
-if (info.Status == LookupStatus.Ok)
-    Console.WriteLine($"{info.Operator}, region {info.RegionCode}, ported: {info.Ported}");
-
-var activity = await client.LookupActivityAsync(new LookupRequest { PhoneNumber = "+79991234567" });
-Console.WriteLine($"score: {activity.Score}");   // 0 to 1
-```
-
-Worth knowing before you build on it:
-
-- **"No data" is an answer, not an error.** It comes back as `LookupStatus.NoData` with `Cost.Amount`
-  of zero. Retrying will not change it, and a number with no activity score may still answer
-  `LookupNumberInfoAsync` — that describes the service for that number, not the number.
-- **Reconcile against `Cost`, not against the number of requests you made.**
-- **The operator is the one serving the number now**, which is not what its prefix implies: a ported
-  number keeps the prefix of the operator that issued it. That is the reason to ask rather than infer.
-- **Treat the activity score as a signal, not a verdict.** The same number can score differently on
-  repeated lookups, so it is sound for cleaning a list and unsound as the sole basis for refusing a
-  customer.
 
 ## Balance, prices and usage
 
@@ -140,16 +152,15 @@ var balance = await client.GetBalanceAsync();
 Console.WriteLine($"{balance.Available.Amount} {balance.Available.Currency} left to spend");
 
 var prices = await client.GetPricesAsync();
-foreach (var p in prices.Prices)
+foreach (var p in prices.Prices.Where(p => p.Available))
     Console.WriteLine($"{p.Method}: {p.Price.Amount} {p.Price.Currency}");
-foreach (var l in prices.Lookups)
-    Console.WriteLine($"lookup {l.Method}: {l.Price.Amount} {l.Price.Currency}");
 
 var usage = await client.GetUsageAsync(from: DateTime.UtcNow.AddDays(-7), to: DateTime.UtcNow);
 Console.WriteLine($"{usage.Successful}/{usage.TotalVerifications} verified");
-// Lookups are counted separately, so spend for the range is the two totals added together.
-Console.WriteLine($"{usage.Lookups.Billable}/{usage.Lookups.Total} lookups charged");
 ```
+
+`GetPricesAsync` lists every priced method; `Available` says whether your account may request it.
+Calling `VerifyAsync` with one that is not available fails with `method_not_available`.
 
 ## Receiving Webhooks
 
@@ -184,7 +195,7 @@ The SDK throws a small, typed hierarchy:
 
 - **`VerificahubApiException`** — the API returned a non-2xx response. Branch on `ErrorCode` (see
   `VerificahubErrorCodes`); `StatusCode`, `Detail`, `TraceId`, and (for `invalid_code`)
-  `AttemptsRemaining` are available.
+  `AttemptsRemaining` are available, and `Problem` carries any extra fields.
 - **`VerificahubTransportException`** — a network/DNS/TLS/timeout failure; no response was received.
 - **`VerificahubProtocolException`** — a response arrived but could not be interpreted.
 
@@ -204,6 +215,15 @@ catch (VerificahubApiException ex) when (ex.ErrorCode == VerificahubErrorCodes.I
     Console.WriteLine("Top up your balance");
 }
 ```
+
+Two `403`s mean the credentials are right but the project or the calling server is not allowed yet.
+Handle them separately from `401`:
+
+| `ErrorCode` | Meaning | Extra fields on `ex.Problem` |
+| --- | --- | --- |
+| `ComplianceRequired` | The project has not passed verification in the dashboard. | `ComplianceStatus`, `DashboardUrl` |
+| `IpNotAllowed` | The request came from an address not approved for the project. | `SourceIp` |
+| `MethodNotAvailable` | The method is not enabled for your account. | — |
 
 A cancelled `CancellationToken` surfaces as the standard `OperationCanceledException`.
 
@@ -227,6 +247,18 @@ services.AddTransient<IVerificahubClient>(sp =>
 The client never mutates the `HttpClient` you pass — it applies the base address and `Authorization`
 header per request — so it is safe to share one across SDKs, and you don't need to set `BaseAddress`
 on the named client. It does not dispose an `HttpClient` you supply.
+
+## Upgrading from 1.x
+
+2.0 tracks what the API serves today. See the [changelog](CHANGELOG.md) for the full list; the
+breaking parts are:
+
+- Number lookups are gone (`LookupNumberInfoAsync`, `LookupActivityAsync`, and the `Lookups` members of
+  the prices and usage responses) — the API no longer offers them.
+- `VerificationMethod.MaxOtp` and `VerificationMethod.Voice` are gone. Use `MaxBot` for MAX and
+  `PassCall` for a voice call.
+- An unrecognised `method` on `VerifyAsync` now yields `UnknownInitiateResponse` instead of a
+  `VerificahubProtocolException`.
 
 ## Development
 

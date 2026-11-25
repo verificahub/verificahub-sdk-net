@@ -19,6 +19,7 @@ namespace VerificahubNet
         public const string InsufficientBalance = "insufficient_balance";
 
         /// <summary>No gateway number was available to service the verification (HTTP 402).</summary>
+        [System.Obsolete("The API no longer returns no_gateway_available. Kept so existing comparisons still compile; remove them.")]
         public const string NoGatewayAvailable = "no_gateway_available";
 
         /// <summary>Pricing could not be resolved for the verification (HTTP 402).</summary>
@@ -41,5 +42,32 @@ namespace VerificahubNet
 
         /// <summary>Authentication failed or was missing (HTTP 401).</summary>
         public const string Unauthorized = "unauthorized";
+
+        /// <summary>The credentials are valid but the request is not permitted (HTTP 403).</summary>
+        public const string Forbidden = "forbidden";
+
+        /// <summary>
+        /// The project has not passed verification in the dashboard yet, so every <c>/v1/*</c> request is
+        /// refused (HTTP 403). <see cref="Models.ProblemDetails.ComplianceStatus"/> and
+        /// <see cref="Models.ProblemDetails.DashboardUrl"/> say where it stands and where to finish it.
+        /// </summary>
+        public const string ComplianceRequired = "compliance_required";
+
+        /// <summary>
+        /// The request came from an address not approved for the project (HTTP 403).
+        /// <see cref="Models.ProblemDetails.SourceIp"/> carries the address the API saw.
+        /// </summary>
+        public const string IpNotAllowed = "ip_not_allowed";
+
+        /// <summary>
+        /// The requested method is not enabled for your account (HTTP 403); the detail names the ones that
+        /// are. <c>GetPricesAsync</c> marks each method's availability.
+        /// </summary>
+        public const string MethodNotAvailable = "method_not_available";
+
+        /// <summary>
+        /// <c>sms</c> to this number's country is not enabled for your account (HTTP 403).
+        /// </summary>
+        public const string SmsDestinationNotAllowed = "sms_destination_not_allowed";
     }
 }

@@ -38,5 +38,23 @@ namespace VerificahubNet.Models
         /// <summary>For an <c>invalid_code</c> error: the number of code-check attempts remaining.</summary>
         [JsonPropertyName("attempts_remaining")]
         public int? AttemptsRemaining { get; set; }
+
+        /// <summary>
+        /// For a <c>compliance_required</c> error: the project's current verification status.
+        /// </summary>
+        [JsonPropertyName("compliance_status")]
+        public string? ComplianceStatus { get; set; }
+
+        /// <summary>
+        /// For a <c>compliance_required</c> error: where in the dashboard to complete project verification.
+        /// </summary>
+        [JsonPropertyName("dashboard_url")]
+        public string? DashboardUrl { get; set; }
+
+        /// <summary>
+        /// For an <c>ip_not_allowed</c> error: the address the request came from, as the API saw it.
+        /// </summary>
+        [JsonPropertyName("source_ip")]
+        public string? SourceIp { get; set; }
     }
 }

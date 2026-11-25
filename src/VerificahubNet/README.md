@@ -1,8 +1,10 @@
+![VerificahubNet logo](https://raw.githubusercontent.com/verificahub/verificahub-sdk-net/main/assets/icon.png)
+
 # VerificahubNet
 
 .NET SDK for the [Verificahub](https://verificahub.ru) phone-verification API — initiate
-verifications (SMS, flash call, reverse flash call, Telegram, MTS ID, MAX), check codes, poll status,
-read balance, prices and usage, and validate webhook signatures.
+verifications (reverse flash call, flash call, SMS, voice call, Telegram, WhatsApp, MTS ID, MAX),
+check codes, poll status, read balance, prices and usage, and validate webhook signatures.
 
 ## Install
 
@@ -13,6 +15,9 @@ dotnet add package VerificahubNet
 Multi-targets `netstandard2.0`, `net8.0`, and `net10.0`.
 
 ## Quick Start
+
+The API opens once your project has passed verification in the Verificahub dashboard, and only from
+the server addresses approved for it.
 
 ```csharp
 using VerificahubNet;
@@ -59,6 +64,10 @@ try
 catch (VerificahubApiException ex) when (ex.ErrorCode == VerificahubErrorCodes.InvalidCode)
 {
     Console.WriteLine($"Wrong code, {ex.AttemptsRemaining} attempts left");
+}
+catch (VerificahubApiException ex) when (ex.ErrorCode == VerificahubErrorCodes.ComplianceRequired)
+{
+    Console.WriteLine($"Finish project verification: {ex.Problem?.DashboardUrl}");
 }
 ```
 

@@ -6,6 +6,48 @@ All notable changes to this project are documented here. The format is based on
 
 ## [Unreleased]
 
+## [2.0.0]
+
+Brings the client back in line with the API. Several things 1.x offered had stopped working: two
+methods could not be requested at all, and the lookup calls were answered with `404`.
+
+### Added
+
+- **WhatsApp** — `VerificationMethod.WhatsappOtp` (`whatsapp_otp`) and `WhatsAppInitiateResponse`. The
+  code arrives from the official VerificaHub WhatsApp Business account and is submitted with
+  `CheckCodeAsync`.
+- **Voice call** — `VerificationMethod.PassCall` (`pass_call`) and `PassCallInitiateResponse`. A robot
+  calls and dictates the code. Charged when the call is requested, not when it is answered.
+- `GetVerificationStatusResponse.FailureReason` — why a session ended `Expired` or `Failed`
+  (`VerificationFailureReason`: `NoResponse`, `Declined`, `WrongCode`, `NotDelivered`, `Unreachable`,
+  `Unknown`). `null` while the session is open or once it is verified.
+- `MethodPriceResponse.Available` — whether your account may request the method. Every priced method is
+  listed; requesting one marked unavailable fails with `method_not_available`.
+- Error codes `ComplianceRequired`, `IpNotAllowed`, `MethodNotAvailable`, `SmsDestinationNotAllowed`
+  and `Forbidden`, with `ProblemDetails.ComplianceStatus`, `.DashboardUrl` and `.SourceIp` for the first
+  two. Both `compliance_required` and `ip_not_allowed` are `403`, not `401`: the credentials are fine,
+  the project or the calling server is not yet allowed.
+- `UnknownInitiateResponse` — see *Changed*.
+
+### Changed
+
+- **`VerifyAsync` no longer throws on a method it does not recognise.** It returns
+  `UnknownInitiateResponse` with the common fields and the raw `method` in `RawMethod`. By the time the
+  response is read the verification has already started — and may have been charged — so throwing lost
+  its `RequestId`. This is what happened to every 1.x caller that requested `whatsapp_otp` or `pass_call`.
+- `VerificationMethod` members now have explicit values. Members that remain keep their 1.x numbers, so
+  integers you have persisted keep their meaning.
+- `VerificahubErrorCodes.NoGatewayAvailable` is `[Obsolete]`: the API no longer returns it.
+
+### Removed
+
+- **Number lookups.** `LookupNumberInfoAsync`, `LookupActivityAsync`, `LookupRequest`, `LookupResponse`,
+  `LookupMethod`, `LookupStatus`, `MobileOperator`, `GetPricesResponse.Lookups`,
+  `LookupPriceResponse`, `GetUsageResponse.Lookups` and `LookupUsageResponse`. The API no longer offers
+  lookups; the calls were returning `404`.
+- `VerificationMethod.MaxOtp` — withdrawn from the public API. Use `MaxBot`.
+- `VerificationMethod.Voice` — the API never accepted it. The voice method is `PassCall`.
+
 ## [1.1.0]
 
 Catches the client up with the API: one verification method and a whole service had shipped without it.
